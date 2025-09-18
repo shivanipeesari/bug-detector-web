@@ -4,10 +4,6 @@ import re
 import json
 from typing import List, Dict, Any
 
-# Configure the Gemini API with your API key
-# Ensure you have set the environment variable GEMINI_API_KEY with your key.
-# For example, on Linux/macOS: export GEMINI_API_KEY="YOUR_API_KEY"
-# On Windows: set GEMINI_API_KEY="YOUR_API_KEY"
 try:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -18,14 +14,9 @@ except ValueError as e:
     exit()
 
 def detect_bugs(code: str) -> List[Dict[str, Any]]:
-    """
-    Uses the Gemini API to analyze Python code and detect bugs.
-    Returns a list of issues with type, description, line number, function name, and code line.
-    """
     issues = []
     lines = code.split('\n')
 
-    # Prompt for Gemini to analyze the code
     prompt = f"""
     Analyze the following Python code for bugs and return a JSON object with the following structure for each issue:
     - "type": string (e.g., "SyntaxError", "NameError", "Missing Colon", etc.),
@@ -43,27 +34,20 @@ def detect_bugs(code: str) -> List[Dict[str, Any]]:
     """
 
     try:
-        # Generate content using Gemini (e.g., gemini-1.5-pro model)
         model = genai.GenerativeModel('gemini-1.5-pro')
         response = model.generate_content(prompt)
         
-        # Extract JSON from response.
         json_str = response.text.strip()
         
-        # Clean up the response to ensure it's valid JSON
-        # Some models may return a markdown code block, so we'll remove it.
         if json_str.startswith('```json'):
             json_str = json_str.replace('```json', '').replace('```', '').strip()
             
         issues_data = json.loads(json_str) if json_str else []
 
-        # Validate and structure the issues
         for issue in issues_data:
             if not all(key in issue for key in ['type', 'description', 'line', 'name', 'code_line']):
-                continue  # Skip malformed entries
+                continue
             
-            # Use line number to fetch the actual code line
-            # Ensure line number is valid and within the bounds of the code
             line_num = int(issue['line']) - 1
             code_line = lines[line_num].strip() if 0 <= line_num < len(lines) else issue['code_line']
             
@@ -87,7 +71,6 @@ def detect_bugs(code: str) -> List[Dict[str, Any]]:
         }]
     except Exception as e:
         print(f"Error with Gemini API: {e}")
-        # Fallback: Return a generic issue if the API call fails
         issues = [{
             'type': 'API Error',
             'description': f"Failed to analyze code: {str(e)}",
@@ -98,30 +81,25 @@ def detect_bugs(code: str) -> List[Dict[str, Any]]:
 
     return issues
 
-# Example Usage
 if __name__ == "__main__":
-    # Sample buggy code to be analyzed
     buggy_code = """
 def calculate_area(radius):
-    # Missing colon here
     if radius > 0
         return 3.14 * radius * radius
 
 def divide(a, b):
-    # Potential ZeroDivisionError if b is 0
     result = a / b
     print("Result is:", result)
 
 def main():
     x = 10
-    y = "5" # Type mismatch
+    y = "5"
     z = x + y
 
     area = calculate_area(-5)
     
-    divide(10, 0) # This will cause a runtime error
+    divide(10, 0)
     
-    # Missing variable 'my_var'
     print(my_var)
 """
 
