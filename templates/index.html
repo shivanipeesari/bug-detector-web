@@ -1,30 +1,243 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bug Detector</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .background-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .bug-particle {
+            position: absolute;
+            font-size: 1.2rem;
+            opacity: 0.3;
+            animation: float 15s infinite linear;
+        }
+        .bug-particle:nth-child(1) { top: 10%; left: 5%; animation-duration: 12s; font-size: 1rem; animation-delay: 0s; }
+        .bug-particle:nth-child(2) { top: 30%; left: 80%; animation-duration: 18s; font-size: 1.5rem; animation-delay: 2s; }
+        .bug-particle:nth-child(3) { top: 50%; left: 20%; animation-duration: 14s; font-size: 1.3rem; animation-delay: 4s; }
+        .bug-particle:nth-child(4) { top: 70%; left: 60%; animation-duration: 16s; font-size: 1.1rem; animation-delay: 6s; }
+        .bug-particle:nth-child(5) { top: 20%; left: 40%; animation-duration: 20s; font-size: 1.4rem; animation-delay: 8s; }
+        @keyframes float {
+            0% { transform: translate(0, 0); opacity: 0.3; }
+            50% { opacity: 0.5; }
+            100% { transform: translate(100vw, 50vh); opacity: 0.2; }
+        }
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            background: #ffffff;
+            max-width: 700px;
+            width: 100%;
+            padding: 2rem;
+            animation: cardEnter 0.6s ease-out;
+            z-index: 1;
+        }
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(20px) rotate(2deg); }
+            to { opacity: 1; transform: translateY(0) rotate(0); }
+        }
+        h1 {
+            font-size: 2.5rem;
+            color: #1e3a8a;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .welcome-text {
+            color: #4b5563;
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .textarea {
+            resize: vertical;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 0 8px rgba(59, 130, 246, 0.3);
+            transform: scale(1.01);
+            animation: pulse 1.5s infinite;
+            outline: none;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+            50% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.2); }
+        }
+        .btn-primary {
+            background: #3b82f6;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: background 0.3s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 1.5rem auto;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        .btn-primary:active {
+            animation: bounce 0.3s;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .spinner {
+            display: none;
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+        .btn-primary:disabled .spinner {
+            display: inline-block;
+        }
+        .list-group-item {
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 15px;
+            color: #7f1d1d;
+            font-size: 0.95rem;
+            opacity: 0;
+            animation: slideIn 0.4s ease-in forwards;
+        }
+        .list-group-item:nth-child(1) { animation-delay: 0.1s; }
+        .list-group-item:nth-child(2) { animation-delay: 0.2s; }
+        .list-group-item:nth-child(3) { animation-delay: 0.3s; }
+        .list-group-item:nth-child(n+4) { animation-delay: 0.4s; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-15px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .code-line {
+            display: block;
+            font-family: 'Fira Code', monospace;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            padding: 8px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #1f2937;
+        }
+        .issue-description {
+            font-style: italic;
+            color: #991b1b;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+        .no-issues {
+            color: #15803d;
+            font-size: 1.1rem;
+            text-align: center;
+            background: #dcfce7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 1.5rem;
+            animation: popIn 0.4s ease-out;
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .emoji {
+            font-size: 2.5rem;
+            display: block;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            animation: wiggle 2s infinite;
+        }
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(5deg); }
+            75% { transform: rotate(-5deg); }
+        }
+    </style>
 </head>
-<body class="bg-light">
-<div class="container mt-5">
-    <h1 class="mb-4">🐞 Bug Detector</h1>
-    <form method="post">
-        <textarea name="code" class="form-control" rows="10" placeholder="Paste your Python code here...">{{ code }}</textarea>
-        <button class="btn btn-primary mt-3">Analyze</button>
-    </form>
+<body>
+    <div class="background-animation">
+        <span class="bug-particle">🐞</span>
+        <span class="bug-particle">🐞</span>
+        <span class="bug-particle">🐞</span>
+        <span class="bug-particle">🐞</span>
+        <span class="bug-particle">🐞</span>
+    </div>
+    <div class="card">
+        <span class="emoji">🐞</span>
+        <h1>Bug Detector</h1>
+        <p class="welcome-text">Paste your Python code below, and I’ll find any bugs in a flash!</p>
+        <form method="post" id="codeForm">
+            <textarea name="code" class="form-control textarea" rows="8" placeholder="Paste your Python code here, like 'print('Hello, World!')'">{{ code }}</textarea>
+            <button type="submit" class="btn btn-primary" id="analyzeBtn">
+                <span>Analyze Code</span>
+                <i class="fas fa-spinner fa-spin spinner"></i>
+            </button>
+        </form>
 
-    {% if issues %}
-    <h3 class="mt-4">Results:</h3>
-    <ul class="list-group">
-        {% for issue in issues %}
-        <li class="list-group-item">
-            <b>{{ issue.type }}</b> at line {{ issue.line }} {% if issue.name %}(Function: {{ issue.name }}){% endif %}
-        </li>
-        {% endfor %}
-    </ul>
-    {% elif code %}
-    <p class="mt-4 text-success">✅ No issues found!</p>
-    {% endif %}
-</div>
+        {% if issues %}
+        <h3 class="mt-4">Found Issues:</h3>
+        <ul class="list-group">
+            {% for issue in issues %}
+            <li class="list-group-item">
+                <strong>{{ issue.type }}</strong> at line {{ issue.line }}
+                {% if issue.name %}(Function: {{ issue.name }}){% endif %}
+                <p class="issue-description">{{ issue.description }}</p>
+                {% if issue.code_line %}
+                <code class="code-line">{{ issue.code_line }}</code>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% elif code %}
+        <p class="no-issues">✅ Your code is perfect! No bugs found!</p>
+        {% endif %}
+    </div>
+
+    <script>
+        // Add loading state to button on form submission
+        document.getElementById('codeForm').addEventListener('submit', function() {
+            const btn = document.getElementById('analyzeBtn');
+            btn.disabled = true;
+            btn.querySelector('span').textContent = 'Analyzing...';
+        });
+    </script>
 </body>
 </html>
 
